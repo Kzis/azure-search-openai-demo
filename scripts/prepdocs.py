@@ -14,7 +14,7 @@ from azure.search.documents.indexes.models import *
 from azure.search.documents import SearchClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
 
-MAX_SECTION_LENGTH = 1000
+MAX_SECTION_LENGTH = 550
 SENTENCE_SEARCH_LIMIT = 100
 SECTION_OVERLAP = 100
 
