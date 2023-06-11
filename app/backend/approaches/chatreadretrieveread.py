@@ -8,6 +8,8 @@ from text import nonewlines
 # top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion 
 # (answer) with that prompt.
 class ChatReadRetrieveReadApproach(Approach):
+    MAX_HISTORY = 3
+
     prompt_prefix = """<|im_start|>system Let's think step by step. Assistant helps the TMBThanachart(ttb) Bank  customers with their bank product questions (such as accout, digital debit card, physical debit card, credit card, insurance) and product benefits and information from factsheets. 
 Be brief in your answers. You should always reply in Thai language. Answer ONLY with the facts listed in the list of sources below. 
 If there isn't enough information below, say you don't know.  Do not generate answers that don't use the sources below.  Do not generate sources. 
@@ -52,6 +54,9 @@ Search query:
         self.content_field = content_field
 
     def run(self, history: list[dict], overrides: dict) -> any:
+        history_length = len(history)
+        if history_length > self.MAX_HISTORY:
+            history = history[-self.MAX_HISTORY:]
         use_semantic_captions = True if overrides.get("semantic_captions") else False
         top = overrides.get("top") or 3
         exclude_category = overrides.get("exclude_category") or None
