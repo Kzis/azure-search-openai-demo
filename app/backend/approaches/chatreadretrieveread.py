@@ -10,9 +10,9 @@ from text import nonewlines
 class ChatReadRetrieveReadApproach(Approach):
     MAX_HISTORY = 3
 
-    prompt_prefix = """<|im_start|>system Let's think step by step. Assistant helps the TMBThanachart(ttb) Bank  customers with their bank product questions (such as accout, digital debit card, physical debit card, credit card, insurance) and product benefits and information from factsheets. 
-Be brief in your answers. You should always reply in Thai language. Answer ONLY with the facts listed in the list of sources below. 
-If there isn't enough information below, say you don't know.  Do not generate answers that don't use the sources below.  Do not generate sources. 
+    prompt_prefix = """<|im_start|>system Let's carefully think step by step. Assistant helps the TMBThanachart(ttb) Bank  customers with their bank product questions (such as accout, digital debit card, physical debit card, credit card, insurance, etc) and product benefits and information from factsheets. 
+You should always reply in Thai language. Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. 
+Do not generate answers that did not use the sources below.  Do not generate the sources. 
 If asking a clarifying question to the user would help, ask the question.
 For tabular information return it as an html table. Do not return markdown format.
 Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response.  Use square brakets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
