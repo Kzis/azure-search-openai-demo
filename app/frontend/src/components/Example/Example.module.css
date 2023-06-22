@@ -1,4 +1,10 @@
+@font-face {
+    font-family: ttb;
+    src: url('../../fonts/ekachon-regular.woff2') format('woff2');
+}
+
 .examplesNavList {
+    font-family: ttb, ekachon;
     list-style: none;
     padding-left: 0;
     display: flex;
@@ -9,6 +15,7 @@
 }
 
 .example {
+    font-family: ttb, ekachon;
     word-break: break-word;
     background: #dbdbdb;
     border-radius: 8px;
@@ -25,6 +32,7 @@
 }
 
 .exampleText {
+    font-family: ttb, ekachon;
     margin: 0;
     font-size: 22px;
     width: 280px;
@@ -33,6 +41,7 @@
 
 @media only screen and (max-height: 780px) {
     .exampleText {
+        font-family: ttb, ekachon;
         font-size: 20px;
         height: 80px;
     }
