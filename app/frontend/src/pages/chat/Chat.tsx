@@ -134,8 +134,10 @@ const Chat = () => {
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" />
-                            <h1 className={styles.chatEmptyStateTitle}>Chat with our products and services</h1>
+                            {/* <SparkleFilled fontSize={"120px"} primaryFill={"rgba(115, 118, 225, 1)"} aria-hidden="true" aria-label="Chat logo" /> */}
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Ttb_bank_logo2.png" alt="Chat logo" className={styles.chatLogo} />
+                            <h1 className={styles.chatEmptyStateTitle}>Ask about ttb products and services</h1>
+                            <h3 className={styles.chatEmptyStateTitle2}>( ttb All Free and ttb Touch user guide )</h3>
                             <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2>
                             <ExampleList onExampleClicked={onExampleClicked} />
                         </div>

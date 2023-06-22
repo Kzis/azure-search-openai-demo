@@ -31,13 +31,25 @@
 .chatEmptyStateTitle {
     font-size: 4rem;
     font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 0px;
+}
+
+.chatEmptyStateTitle2 {
+    font-weight: 400;
     margin-top: 0;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    color: rgb(128, 128, 128);
 }
 
 .chatEmptyStateSubtitle {
     font-weight: 600;
     margin-bottom: 10px;
+}
+
+.chatLogo {
+    width: 120px;
+    height: auto;
 }
 
 @media only screen and (max-height: 780px) {
