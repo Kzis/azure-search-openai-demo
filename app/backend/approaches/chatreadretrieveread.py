@@ -44,9 +44,9 @@ Each source has a name followed by colon and the actual information, always incl
 
     query_prompt_template = """ Let's think step by step. Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base about bank product questions and product benefits and information from factsheets. 
     Generate a search query based on the conversation and the new question. 
+    The name "ttb" should always be in lowercase letters.
     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
     Do not include any text inside [] or <<>> in the search query terms.
-    If the question is not in English, translate the question to English before generating the search query.
 
 
 Chat History:
@@ -80,7 +80,7 @@ Search query:
             engine=self.gpt_deployment, 
             prompt=prompt, 
             temperature=0.0, 
-            max_tokens=32, 
+            max_tokens=50, 
             n=1, 
             stop=["\n"])
         q = completion.choices[0].text
@@ -119,7 +119,7 @@ Search query:
             engine=self.chatgpt_deployment, 
             prompt=prompt, 
             temperature=overrides.get("temperature") or 0.7, 
-            max_tokens=1024, 
+            max_tokens=1500, 
             n=1, 
             stop=["<|im_end|>", "<|im_start|>"])
 
