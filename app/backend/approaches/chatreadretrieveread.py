@@ -47,6 +47,7 @@ Each source has a name followed by colon and the actual information, always incl
     The name "ttb" should always be in lowercase letters.
     Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
     Do not include any text inside [] or <<>> in the search query terms.
+    Search query should be in Thai.
 
 
 Chat History:
@@ -75,12 +76,12 @@ Search query:
         filter = "category ne '{}'".format(exclude_category.replace("'", "''")) if exclude_category else None
 
         # STEP 1: Generate an optimized keyword search query based on the chat history and the last question
-        prompt = self.query_prompt_template.format(chat_history=self.get_chat_history_as_text(history, include_last_turn=False), question=history[-1]["user"])
+        prompt = self.query_prompt_template.format(chat_history=None, question=history[-1]["user"])
         completion = openai.Completion.create(
             engine=self.gpt_deployment, 
             prompt=prompt, 
             temperature=0.0, 
-            max_tokens=50, 
+            max_tokens=120, 
             n=1, 
             stop=["\n"])
         q = completion.choices[0].text
@@ -125,7 +126,7 @@ Search query:
 
         return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
     
-    def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=1000) -> str:
+    def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=0) -> str:
         history_text = ""
         for h in reversed(history if include_last_turn else history[:-1]):
             history_text = """<|im_start|>user""" +"\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (h.get("bot") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
