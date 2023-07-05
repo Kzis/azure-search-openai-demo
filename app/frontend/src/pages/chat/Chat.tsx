@@ -138,8 +138,8 @@ const Chat = () => {
                             <img src="https://upload.wikimedia.org/wikipedia/commons/d/dd/Ttb_bank_logo2.png" alt="Chat logo" className={styles.chatLogo} />
                             <h1 className={styles.chatEmptyStateTitle}>Ask about ttb products and services</h1>
                             <h3 className={styles.chatEmptyStateTitle2}>( ttb All Free and ttb Touch user guide )</h3>
-                            <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2>
-                            <ExampleList onExampleClicked={onExampleClicked} />
+                            {/* <h2 className={styles.chatEmptyStateSubtitle}>Ask anything or try an example</h2> */}
+                            {/* <ExampleList onExampleClicked={onExampleClicked} /> */}
                         </div>
                     ) : (
                         <div className={styles.chatMessageStream}>
