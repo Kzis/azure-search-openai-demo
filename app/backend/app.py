@@ -3,6 +3,9 @@ import mimetypes
 import time
 import logging
 import openai
+import csv
+import json
+import html
 from flask import Flask, request, jsonify
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
@@ -62,6 +65,7 @@ ask_approaches = {
 chat_approaches = {
     "rrr": ChatReadRetrieveReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
+LOG_FILE_PATH = "chat_log.csv"
 
 app = Flask(__name__)
 
@@ -73,6 +77,20 @@ def static_file(path):
 # Serve content files from blob storage from within the app to keep the example self-contained. 
 # *** NOTE *** this assumes that the content files are public, or at least that all users of the app
 # can access all the files. This is also slow and memory hungry.
+# Ensure the CSV file has the necessary headers
+def initialize_log_file():
+    if not os.path.exists(LOG_FILE_PATH):
+        with open(LOG_FILE_PATH, "a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(["request", "response"])
+
+# Log the request and response to the CSV file
+def log_request_response(request_data, response_data):
+    with open(LOG_FILE_PATH, "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([request_data, response_data])
+
+
 @app.route("/content/<path>")
 def content_file(path):
     blob = blob_container.get_blob_client(path).download_blob()
@@ -104,6 +122,7 @@ def chat():
         if not impl:
             return jsonify({"error": "unknown approach"}), 400
         r = impl.run(request.json["history"], request.json.get("overrides") or {})
+        log_request_response(json.dumps(request.json), json.dumps(r))
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /chat")
@@ -116,4 +135,5 @@ def ensure_openai_token():
         openai.api_key = openai_token.token
     
 if __name__ == "__main__":
+    initialize_log_file()
     app.run()
