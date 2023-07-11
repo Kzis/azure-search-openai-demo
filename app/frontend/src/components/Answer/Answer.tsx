@@ -65,14 +65,35 @@ export const Answer = ({
                 <Stack.Item>
                     <Stack horizontal wrap tokens={{ childrenGap: 5 }}>
                         <span className={styles.citationLearnMore}>Citations:</span>
-                        {parsedAnswer.citations.map((x, i) => {
-                            const path = getCitationFilePath(x);
-                            return (
-                                <a key={i} className={styles.citation} title={x} onClick={() => onCitationClicked(path)}>
-                                    {`${++i}. ${x}`}
-                                </a>
-                            );
-                        })}
+                        {
+                            (() => {
+                                let count = 0;
+                                return <>
+                                    {parsedAnswer.citations.map((x) => {
+                                        const path = getCitationFilePath(x);
+                                        count++;
+                                        return (
+                                            <a key={count} className={styles.citation} title={x} onClick={() => onCitationClicked(path)}>
+                                                {`${count}. ${x}`}
+                                            </a>
+                                        );
+                                    })}
+                                    {answer.data_points.map((dataPoint) => {
+                                        const [firstPart] = dataPoint.split(": ");
+                                        const citationIndex = parsedAnswer.citations.findIndex(x => x.startsWith(firstPart));
+                                        if (citationIndex === -1) {
+                                            count++;
+                                            return (
+                                                <a key={count} className={styles.citation} title={firstPart} onClick={() => onCitationClicked(getCitationFilePath(firstPart))}>
+                                                    {`${count}. ${firstPart}`}
+                                                </a>
+                                            );
+                                        }
+                                        return null; // Skip if the first part is already present in the citations
+                                    })}
+                                </>
+                            })()
+                        }
                     </Stack>
                 </Stack.Item>
             )}
