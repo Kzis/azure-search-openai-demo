@@ -122,20 +122,30 @@ Search query:
         messages = self.get_messages_from_history(prompt_override=prompt_override, follow_up_questions_prompt=follow_up_questions_prompt,history=history, sources=content)
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        chat_completion = openai.ChatCompletion.create(
-            deployment_id=self.chatgpt_deployment,
-            model=self.chatgpt_model,
-            messages=messages, 
+        # new code: new api called object
+        # chat_completion = openai.ChatCompletion.create(
+        #     deployment_id=self.chatgpt_deployment,
+        #     model=self.chatgpt_model,
+        #     messages=messages, 
+        #     temperature=overrides.get("temperature") or 0.7, 
+        #     max_tokens=1500, 
+        #     n=1, 
+        #     stop=["<|im_end|>", "<|im_start|>"])
+
+        # msg_to_display = '\n\n'.join([str(message) for message in messages])
+        # chat_content = chat_completion.choices[0].message.content
+        # return {"data_points": results, "answer": chat_content, "thoughts": f"Searched for:<br>{q}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
+    
+        # old implementation
+        chat_completion = openai.Completion.create(
+            engine=self.chatgpt_deployment,
+            prompt=messages,
             temperature=overrides.get("temperature") or 0.7, 
             max_tokens=1500, 
             n=1, 
             stop=["<|im_end|>", "<|im_start|>"])
         
-        chat_content = chat_completion.choices[0].message.content
-
-        msg_to_display = '\n\n'.join([str(message) for message in messages])
-
-        return {"data_points": results, "answer": chat_content, "thoughts": f"Searched for:<br>{q}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
+        return {"data_points": results, "answer": chat_completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Conversations:<br>" + messages.replace('\n', '<br>')}
     
     def get_chat_history_as_text(self, history: Sequence[dict[str, str]], include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
         history_text = ""
@@ -151,7 +161,7 @@ Search query:
         '''
         messages = []
         token_count = 0
-        # new code 
+        # new code: change in promt template
         # if prompt_override is None:
         #     system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
         # elif prompt_override.startswith(">>>"):
@@ -167,13 +177,13 @@ Search query:
         else:
             system_message = prompt_override.format(sources=sources, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
 
-        messages.append({"role":self.SYSTEM, "content": system_message})
-        token_count += self.num_tokens_from_messages(messages[-1], self.chatgpt_model)
+        # messages.append({"role":self.SYSTEM, "content": system_message})
+        # token_count += self.num_tokens_from_messages(system_message[-1], self.chatgpt_model)
         
         # latest conversation
-        user_content = history[-1]["user"] + " \nSources:" + sources
-        messages.append({"role": self.USER, "content": user_content})
-        token_count += token_count + self.num_tokens_from_messages(messages[-1], self.chatgpt_model)
+        # user_content = history[-1]["user"] + " \nSources:" + sources
+        # messages.append({"role": self.USER, "content": user_content})
+        # token_count += token_count + self.num_tokens_from_messages(system_message[-1], self.chatgpt_model)
 
         '''
         Enqueue in reverse order
@@ -182,15 +192,16 @@ Search query:
         Keep track of token count for each conversation
         If token count exceeds limit, break
         '''
-        for h in reversed(history[:-1]):
-            if h.get("bot"):
-                messages.insert(1, {"role": self.ASSISTANT, "content" : h.get("bot")})
-                token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
-            messages.insert(1, {"role": self.USER, "content" : h.get("user")})
-            token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
-            if token_count > approx_max_tokens*4:
-                break
-        return messages
+        # for h in reversed(history[:-1]):
+        #     if h.get("bot"):
+        #         messages.insert(1, {"role": self.ASSISTANT, "content" : h.get("bot")})
+        #         token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
+        #     messages.insert(1, {"role": self.USER, "content" : h.get("user")})
+        #     token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
+        #     if token_count > approx_max_tokens*4:
+        #         break
+        # return messages
+        return system_message
     
     def num_tokens_from_messages(self, message: dict[str,str], model: str) -> int:
         """
