@@ -147,7 +147,7 @@ Search query:
         
         return {"data_points": results, "answer": chat_completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Conversations:<br>" + messages.replace('\n', '<br>')}
     
-    def get_chat_history_as_text(self, history: Sequence[dict[str, str]], include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
+    def get_chat_history_as_text(self, history: Sequence[dict[str, str]], include_last_turn: bool=True, approx_max_tokens: int=0) -> str:
         history_text = ""
         for h in reversed(history if include_last_turn else history[:-1]):
             history_text = """<|im_start|>user""" + "\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (h.get("bot", "") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
