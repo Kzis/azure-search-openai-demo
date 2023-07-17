@@ -8,10 +8,20 @@ from approaches.approach import Approach
 from text import nonewlines
 
 class ChatReadRetrieveReadApproach(Approach):
-<<<<<<< HEAD
+    # Chat roles
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+
+    """
+    Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
+    top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion
+    (answer) with that prompt.
+    """
+
     MAX_HISTORY = 3
 
-    prompt_prefix = """<|im_start|>system Assistant provides accurate information to potential customers of TMBThanachart (TTB) Bank regarding various bank products. These products include accounts, debit cards (both digital and physical), credit cards, insurance, and more. Customers rely on your responses, and any fabrication of data can harm the bank's reputation. Therefore, it is crucial to answer based only on the facts provided in the sources below.
+    system_message_chat_conversation = """<|im_start|>system Assistant provides accurate information to potential customers of TMBThanachart (TTB) Bank regarding various bank products. These products include accounts, debit cards (both digital and physical), credit cards, insurance, and more. Customers rely on your responses, and any fabrication of data can harm the bank's reputation. Therefore, it is crucial to answer based only on the facts provided in the sources below.
 
 To assist customers effectively, please consider the following:
 1.Answer in Thai language: Communicate with customers in Thai language to ensure clear understanding.
@@ -37,28 +47,7 @@ Each source has a name followed by colon and the actual information, always incl
 <|im_end|>
 {chat_history}
 """
-
-    follow_up_questions_prompt_content = """Generate three very brief follow-up questions that the user would likely ask next about product benefits and information from factsheets. 
-=======
-    # Chat roles
-    SYSTEM = "system"
-    USER = "user"
-    ASSISTANT = "assistant"
-
-    """
-    Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
-    top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion
-    (answer) with that prompt.
-    """
-    system_message_chat_conversation = """Assistant helps the company employees with their healthcare plan questions, and questions about the employee handbook. Be brief in your answers.
-Answer ONLY with the facts listed in the list of sources below. If there isn't enough information below, say you don't know. Do not generate answers that don't use the sources below. If asking a clarifying question to the user would help, ask the question.
-For tabular information return it as an html table. Do not return markdown format.
-Each source has a name followed by colon and the actual information, always include the source name for each fact you use in the response. Use square brackets to reference the source, e.g. [info1.txt]. Don't combine sources, list each source separately, e.g. [info1.txt][info2.pdf].
-{follow_up_questions_prompt}
-{injected_prompt}
-"""
     follow_up_questions_prompt_content = """Generate three very brief follow-up questions that the user would likely ask next about their healthcare plan and employee handbook. 
->>>>>>> 1a8a1ce93471d7d5d73d177477e8b106475289ca
     Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
     Try not to repeat questions that have already been asked.
     Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'"""
@@ -88,14 +77,10 @@ Search query:
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
 
-<<<<<<< HEAD
-    def run(self, history: list[dict], overrides: dict) -> any:
+    def run(self, history: Sequence[dict[str, str]], overrides: dict[str, Any]) -> Any:
         history_length = len(history)
         if history_length > self.MAX_HISTORY:
             history = history[-self.MAX_HISTORY:]
-=======
-    def run(self, history: Sequence[dict[str, str]], overrides: dict[str, Any]) -> Any:
->>>>>>> 1a8a1ce93471d7d5d73d177477e8b106475289ca
         use_semantic_captions = True if overrides.get("semantic_captions") else False
         top = overrides.get("top") or 3
         exclude_category = overrides.get("exclude_category") or None
@@ -142,26 +127,17 @@ Search query:
             model=self.chatgpt_model,
             messages=messages, 
             temperature=overrides.get("temperature") or 0.7, 
-<<<<<<< HEAD
             max_tokens=1500, 
             n=1, 
             stop=["<|im_end|>", "<|im_start|>"])
-=======
-            max_tokens=1024, 
-            n=1)
         
         chat_content = chat_completion.choices[0].message.content
->>>>>>> 1a8a1ce93471d7d5d73d177477e8b106475289ca
 
         msg_to_display = '\n\n'.join([str(message) for message in messages])
 
         return {"data_points": results, "answer": chat_content, "thoughts": f"Searched for:<br>{q}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
     
-<<<<<<< HEAD
-    def get_chat_history_as_text(self, history, include_last_turn=True, approx_max_tokens=0) -> str:
-=======
     def get_chat_history_as_text(self, history: Sequence[dict[str, str]], include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
->>>>>>> 1a8a1ce93471d7d5d73d177477e8b106475289ca
         history_text = ""
         for h in reversed(history if include_last_turn else history[:-1]):
             history_text = """<|im_start|>user""" + "\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (h.get("bot", "") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
@@ -169,18 +145,27 @@ Search query:
                 break    
         return history_text
     
-    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: Sequence[dict[str, str]], sources: str, approx_max_tokens: int = 1000) -> []:
+    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: Sequence[dict[str, str]], sources: str, approx_max_tokens: int = 1000):
         '''
         Generate messages needed for chat Completion api
         '''
         messages = []
         token_count = 0
+        # new code 
+        # if prompt_override is None:
+        #     system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
+        # elif prompt_override.startswith(">>>"):
+        #     system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt)
+        # else:
+        #     system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
+        
+        # old code with apdatation
         if prompt_override is None:
-            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = self.system_message_chat_conversation.format(injected_prompt="", sources=sources, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
         elif prompt_override.startswith(">>>"):
-            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", sources=sources, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
         else:
-            system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = prompt_override.format(sources=sources, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
 
         messages.append({"role":self.SYSTEM, "content": system_message})
         token_count += self.num_tokens_from_messages(messages[-1], self.chatgpt_model)
