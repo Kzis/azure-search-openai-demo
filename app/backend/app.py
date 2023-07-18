@@ -42,9 +42,13 @@ openai_token = azure_credential.get_token("https://cognitiveservices.azure.com/.
 openai.api_key = openai_token.token
 
 # Set up clients for Cognitive Search and Storage
-search_client = SearchClient(
+search_client1 = SearchClient(
     endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
-    index_name=AZURE_SEARCH_INDEX,
+    index_name="testindex",
+    credential=azure_credential)
+search_client2 = SearchClient(
+    endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
+    index_name="allfreeindex",
     credential=azure_credential)
 blob_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", 
@@ -54,13 +58,13 @@ blob_container = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
 # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
 # or some derivative, here we include several for exploration purposes
 ask_approaches = {
-    "rtr": RetrieveThenReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rrr": ReadRetrieveReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rda": ReadDecomposeAsk(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
+    "rtr": RetrieveThenReadApproach(search_client1, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
+    "rrr": ReadRetrieveReadApproach(search_client1, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
+    "rda": ReadDecomposeAsk(search_client1, AZURE_OPENAI_CHATGPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
 
 chat_approaches = {
-    "rrr": ChatReadRetrieveReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
+    "rrr": ChatReadRetrieveReadApproach(search_client1, search_client2, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
 
 app = Flask(__name__)

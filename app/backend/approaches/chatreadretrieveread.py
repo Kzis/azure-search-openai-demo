@@ -10,13 +10,13 @@ from text import nonewlines
 class ChatReadRetrieveReadApproach(Approach):
     MAX_HISTORY = 3
 
-    prompt_prefix = """<|im_start|>system Assistant provides accurate information to potential customers of TMBThanachart (TTB) Bank regarding various bank products. These products include accounts, debit cards (both digital and physical), credit cards, insurance, and more. Customers rely on your responses, and any fabrication of data can harm the bank's reputation. Therefore, it is crucial to answer based only on the facts provided in the sources below.
+    prompt_prefix = """<|im_start|>system Assistant provides accurate information to potential customers of TMBThanachart (TTB) Bank regarding various bank products. These products include accounts, debit cards (both digital and physical), credit cards, insurance, and more. 
 
 To assist customers effectively, please consider the following:
 1.Answer in Thai language: Communicate with customers in Thai language to ensure clear understanding.
 2.Use the sources provided below: Refer to the sources provided below to obtain accurate information about TMBThanachart Bank products.
-3.Sometimes sources might be empty, so you must say you don't know, dont try to fabricate any information.
-4.Sometimes sources might not related to the question, you must say you don't know, don't try to  fabricate any information.
+3.Sometimes sources might be empty, so you must say you don't know, do not try to fabricate any information.
+4.Sometimes sources might not relate to the question, you must say you don't know, don't try to fabricate any information.
 5.Seek clarification if needed: If additional context or specific product details would help provide better assistance, feel free to ask clarifying questions.
 6.When you site any information you should always end your message with: This AI is still in development and may contain errors or limitations in the accuracy of the information provided. Please use the information with caution and rely on your own judgment.
 7.Be brief with your answer
@@ -42,13 +42,22 @@ Each source has a name followed by colon and the actual information, always incl
     Try not to repeat questions that have already been asked.
     Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'"""
 
-    query_prompt_template = """ Let's think step by step. Below is a history of the conversation so far, and a new question asked by the user that needs to be answered by searching in a knowledge base about bank product questions and product benefits and information from factsheets. 
-    Generate a search query based on the conversation and the new question. 
-    The name "ttb" should always be in lowercase letters.
-    Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
-    Do not include any text inside [] or <<>> in the search query terms.
-    Search query should be in Thai.
+    query_prompt_template = """Let's think step by step. Below is a new question asked by the user that needs to be answered by searching in a knowledge base about bank product questions and product benefits and information from factsheets. 
+After read a question, categorize whether the question is in one of these category: ttb all free, ttb touch. Description of these categories are provided below. Then, generate a search query based on the question.
+The name "ttb" in the search query should always be in lowercase letters.
+Do not include cited source filenames and document names e.g info.txt or doc.pdf in the search query terms.
+Do not include any text inside [] or <<>> in the search query terms.
+Search query should be in Thai.
+###
+ttb touch: Bank's application which used to transfer, save, loan money. Choose this when asked for instruction on how to use the application to loan automobile, register new account, look into insurance, register new into new bank product, authentication and many more. ttb product eg. ttb flash, so goood, cash2go.
+ttb all free: Choose this when question asking about ttb all free benefits and speification. For example: debit and virtual debit card of ttb all free, fees, and other benefits receive from ttb all free account.
+###
+Question: สมัครบัญชีใหม่ทำอย่างไร
+Search query: ขั้นตอนการสมัคร ttb touch, Category: ttb touch
 
+Question: ttb all free ดีอย่างไร
+Search query: สิทธิประโยชน์ของ ttb all free, Category: ttb all free
+###
 
 Chat History:
 {chat_history}
@@ -59,8 +68,9 @@ Question:
 Search query:
 """
 
-    def __init__(self, search_client: SearchClient, chatgpt_deployment: str, gpt_deployment: str, sourcepage_field: str, content_field: str):
-        self.search_client = search_client
+    def __init__(self, search_client1: SearchClient, search_client2: SearchClient, chatgpt_deployment: str, gpt_deployment: str, sourcepage_field: str, content_field: str):
+        self.search_client1 = search_client1
+        self.search_client2 = search_client2
         self.chatgpt_deployment = chatgpt_deployment
         self.gpt_deployment = gpt_deployment
         self.sourcepage_field = sourcepage_field
@@ -97,7 +107,17 @@ Search query:
                                           top=top, 
                                           query_caption="extractive|highlight-false" if use_semantic_captions else None)
         else:
-            r = self.search_client.search(q, filter=filter, top=top)
+            for_search = q.split(", ")
+            q = for_search[0]
+            cate = for_search[1].split(": ")
+            if cate[1] == "ttb touch":
+                r = self.search_client1.search(q, filter=filter, top=top)
+                print("ttb touch")
+            elif cate[1] == "ttb all free":
+                r = self.search_client2.search(q, filter=filter, top=top)
+                print("ttb all free")
+            else:
+                print("Unknow category")
         if use_semantic_captions:
             results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
         else:
